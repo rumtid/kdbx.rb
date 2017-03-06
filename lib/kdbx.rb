@@ -1,39 +1,40 @@
+require "kdbx/version"
 require "kdbx/attributes"
 require "kdbx/encryption"
-require "kdbx/headers"
-require "kdbx/payload"
-require "kdbx/version"
+require "kdbx/wrapper"
+require "kdbx/header"
 
 class Kdbx
   include Attributes
   include Encryption
 
-  def initialize(filename)
-    @version = Version.new
-    @headers = Headers.new
-    @payload = Payload.new
-    self.filename = filename
+  def initialize(filename = nil, **opts)
+    super()
+    if filename == nil
+      @header   = Header.new
+      @carriage = Carriage.new
+    else
+      self.filename = filename
+      self.password = opts[:password] if opts.has_key? :password
+      self.keyfile  = opts[:keyfile]  if opts.has_key? :keyfile
+      load
+    end
   end
 
   def load
-    File.open filename do |kdbxfile|
-      @version.load kdbxfile
-      @headers.load kdbxfile
-      data = StringIO.new decrypt kdbxfile.read
-      data.seek streamstartbytes.bytesize
-      @payload.load data
-      @payload[0] = unwrap @payload[0]
-    end
+    file = File.open filename, "rb"
+    @header = Header.load file
+    decode_content file.read
+    self
+  ensure
+    file.close
   end
 
   def save
-    File.open filename, "w" do |kdbxfile|
-      @version.save kdbxfile
-      @headers.save kdbxfile
-      @payload[0] = wrap @payload[0]
-      data = @payload.save
-      data = streamstartbytes + data
-      kdbxfile.write encrypt data
+    File.open filename, "wb" do |file|
+      @header.save file
+      encode_content file
     end
+    self
   end
 end

@@ -1,50 +1,90 @@
+require "base64"
+
 class Kdbx
   module Attributes
-    HEADERS = %w[finalheader comment cipherid compressionflags masterseed transformseed transformrounds encryptioniv protectedstreamkey streamstartbytes innerrandomstreamid]
-
     attr_reader :filename
     def filename=(name)
       @filename = File.absolute_path name
     end
 
-    def password
-      @password ||= sha256 ""
+    attr_reader :password
+    def password=(str)
+      @password = str == nil ? "" : sha256(str)
     end
 
-    def password=(str)
-      @password = sha256 str
+    attr_reader :keyfile
+    def keyfile=(str)
+      @keyfile = File.absolute_path str
+    end
+
+    def credential
+      secrets = String.new
+      secrets << password if password
+      if keyfile
+        begin
+          data = File.read keyfile
+          if [32, 64].include? data.bytesize
+            secrets << data
+          else
+            doc = REXML::Document.new data
+            ele = doc.elements["/KeyFile/Key/Data"]
+            secrets << Base64.decode64(ele.text)
+          end
+        rescue REXML::ParseException
+          secrets << sha256(data)
+        end
+      end
+      secrets
     end
 
     def compressionflags
-      @headers[3].unpack("L").first
+      @header[3].unpack("L").first
+    end
+
+    def compressionflags=(flag)
+      @header[3] = [flag].pack("L")
+    end
+
+    def zipped?
+      compressionflags == 1
     end
 
     def masterseed
-      @headers[4]
+      @header[4]
     end
 
     def transformseed
-      @headers[5]
+      @header[5]
     end
 
     def transformrounds
-      @headers[6].unpack("Q").first
+      @header[6].unpack("Q").first
+    end
+
+    def transformrounds=(num)
+      @header[6] = [num].pack("Q")
     end
 
     def encryptioniv
-      @headers[7]
+      @header[7]
     end
 
     def protectedstreamkey
-      @headers[8]
+      @header[8]
     end
 
     def streamstartbytes
-      @headers[9]
+      @header[9]
     end
 
     def innerrandomstreamid
-      @headers[10].unpack("L").first
+      @header[10].unpack("L").first
     end
+
+    def innerrandomstreamid=(id)
+      @header[10] = [id].pack("L")
+    end
+
+    attr_accessor :content
   end
 end
