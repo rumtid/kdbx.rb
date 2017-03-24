@@ -4,7 +4,9 @@ Yet another library for kdbx file.
 
 ## Installation
 
-  $ gem install kdbx
+```
+$ gem install kdbx
+```
 
 ## Development
 
