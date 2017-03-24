@@ -20,11 +20,11 @@ module Kdbx::Wrapper
     payload
   end
 
-  def wrap(data)
+  def wrap(payload)
     data = String.new
     data << "\x00\x00\x00\x00"
-    data << OpenSSL::Digest::SHA256.digest(data)
-    data << [data.bytesize].pack("L") << data
+    data << OpenSSL::Digest::SHA256.digest(payload)
+    data << [payload.bytesize].pack("L") << payload
     data << "\x01\x00\x00\x00"
     data << "\x00" * 36
     data

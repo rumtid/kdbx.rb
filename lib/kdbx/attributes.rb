@@ -21,17 +21,17 @@ class Kdbx
       secrets = String.new
       secrets << password if password
       if keyfile
-        begin
-          data = File.read keyfile
-          if [32, 64].include? data.bytesize
-            secrets << data
-          else
+        data = File.read keyfile
+        if [32, 64].include? data.bytesize
+          secrets << data
+        else
+          begin
             doc = REXML::Document.new data
             ele = doc.elements["/KeyFile/Key/Data"]
             secrets << Base64.decode64(ele.text)
+          rescue REXML::ParseException
+            secrets << sha256(data)
           end
-        rescue REXML::ParseException
-          secrets << sha256(data)
         end
       end
       secrets

@@ -11,8 +11,8 @@ class Kdbx
   def initialize(filename = nil, **opts)
     super()
     if filename == nil
-      @header   = Header.new
-      @carriage = Carriage.new
+      @header  = Header.new
+      @content = String.new
     else
       self.filename = filename
       self.password = opts[:password] if opts.has_key? :password
@@ -22,12 +22,11 @@ class Kdbx
   end
 
   def load
-    file = File.open filename, "rb"
-    @header = Header.load file
-    decode_content file.read
+    File.open filename, "rb" do |file|
+      @header = Header.load file
+      decode_content file.read
+    end
     self
-  ensure
-    file.close
   end
 
   def save

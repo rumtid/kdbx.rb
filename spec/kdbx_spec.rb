@@ -29,7 +29,7 @@ RSpec.describe Kdbx do
 
     it "accepts binary keyfile" do
       kdbx = init_from "binary_key.kdbx", keyfile: "binary_key.key"
-      expect(kdbx.content).to include("Value")
+      expect(kdbx.content).to include("secret")
     end
 
     it "accepts both password and keyfile" do

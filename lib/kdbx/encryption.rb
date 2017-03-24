@@ -44,12 +44,14 @@ class Kdbx
         salsa20.encrypt block
       end if innerrandomstreamid == 2
       data = Zlib.gzip data if zipped?
-      data = Wrapper.wrap encrypt data
+      data = Wrapper.wrap data
+      data = encrypt data
       file.write data
     end
 
     def decode_content(data)
-      data = Wrapper.unwrap decrypt data
+      data = decrypt data
+      data = Wrapper.unwrap data
       data = Zlib.gunzip data if zipped?
       data = Wrapper.expose data do |block|
         salsa20.decrypt block
