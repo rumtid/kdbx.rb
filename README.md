@@ -1,11 +1,27 @@
-# kdbx.rb
+# Kdbx Ruby
+
+[![Code Climate](https://codeclimate.com/github/rumtid/kdbx.rb/badges/gpa.svg)](https://codeclimate.com/github/rumtid/kdbx.rb)
 
 Yet another library for kdbx file.
 
 ## Installation
 
-```
-$ gem install kdbx
+    $ gem install kdbx
+
+## Usage
+
+```ruby
+# Open existing kdbx file
+kdbx = Kdbx.new("demo.kdbx", password: "password", keyfile: "demo.key")
+
+# Change password
+kdbx.password = "new pass"
+
+# Change filename
+kdbx.filename = "new.kdbx"
+
+# Save as new.kdbx
+kdbx.save
 ```
 
 ## Development
