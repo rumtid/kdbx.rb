@@ -1,8 +1,9 @@
+require "kdbx/header"
 require "kdbx/version"
+require "kdbx/wrapper"
 require "kdbx/attributes"
 require "kdbx/encryption"
-require "kdbx/wrapper"
-require "kdbx/header"
+require "kdbx/utils/salsa20"
 
 class Kdbx
   include Attributes

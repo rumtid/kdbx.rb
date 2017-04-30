@@ -12,7 +12,8 @@ class Kdbx
 
     def salsa20
       key = sha256 protectedstreamkey
-      Salsa20.new key, "\xE8\x30\x09\x4B\x97\x20\x5D\x2A"
+      iv  = "\xE8\x30\x09\x4B\x97\x20\x5D\x2A"
+      Salsa20.new(iv: iv, key: key)
     end
 
     def masterkey

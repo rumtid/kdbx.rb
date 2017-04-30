@@ -11,9 +11,7 @@ RSpec.describe Kdbx do
     end
 
     def init_from(filename, **opts)
-      if opts.has_key? :keyfile
-        opts[:keyfile] = resource opts[:keyfile]
-      end
+      opts[:keyfile] = resource opts[:keyfile] if opts.has_key? :keyfile
       Kdbx.new resource(filename), **opts
     end
 
