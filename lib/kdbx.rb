@@ -29,10 +29,11 @@ class Kdbx
     self
   end
 
-  def save
+  def save(name = nil)
+    filename = name unless name == nil
     File.open filename, "wb" do |file|
       @header.save file
-      encode_content file
+      file.write encode_content
     end
     self
   end

@@ -39,14 +39,14 @@ class Kdbx
       return data.byteslice size..-1
     end
 
-    def encode_content(file)
+    def encode_content
       data = Wrapper.protect @content do |block|
         salsa20.encrypt block
       end if innerrandomstreamid == 2
       data = Zlib.gzip data if zipped?
       data = Wrapper.wrap data
       data = encrypt data
-      file.write data
+      return data
     end
 
     def decode_content(data)
