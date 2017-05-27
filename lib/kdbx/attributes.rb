@@ -1,4 +1,5 @@
 require "base64"
+require "rexml/document"
 
 class Kdbx
   module Attributes
