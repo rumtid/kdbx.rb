@@ -33,10 +33,36 @@ RSpec.describe Kdbx do
 
   describe "::new" do
     it "has empty content" do
-      expect( Kdbx.new.content ).to eq( String.new )
+      expect( Kdbx.new.content ).to eql( String.new )
+    end
+
+    it "accepts password as keyword" do
+      kdbx = Kdbx.new password: "pass"
+      expect( kdbx.password ).to be_a( String )
+    end
+
+    it "accepts keyfile as keyword" do
+      kdbx = Kdbx.new keyfile: "file"
+      expect( kdbx.keyfile ).to be_a( String )
     end
   end
 
   describe "#save" do
+    FILENAME = File.expand_path("../data/saved.kdbx", __FILE__)
+
+    after(:example) { File.delete FILENAME if File.exist? FILENAME }
+
+    it "saves kdbx file" do
+      expect{ Kdbx.new.save FILENAME }.not_to raise_error
+      expect{ Kdbx.open FILENAME }.not_to raise_error
+    end
+
+    it "keeps old file when error occurred" do
+      IO.write FILENAME, "records"
+      allow( OpenSSL::Cipher ).to receive( :new )
+      expect{ Kdbx.new.save FILENAME }.to raise_error( NoMethodError )
+      expect( File.exist? FILENAME ).to be_truthy
+      expect( IO.read FILENAME ).to eql( "records" )
+    end
   end
 end

@@ -2,20 +2,21 @@ require "openssl"
 require "forwardable"
 
 class Kdbx::Header
-  def self.load(stream)
+  def self.load(file)
     fields = {
-      :pid => stream.readpartial(4),
-      :sid => stream.readpartial(4),
-      :ver => stream.readpartial(4)
+      :pid => file.readpartial(4),
+      :sid => file.readpartial(4),
+      :ver => file.readpartial(4)
     }
     loop do
-      id = stream.readbyte
-      sz = stream.readpartial 2
+      id = file.readbyte
+      sz = file.readpartial 2
       sz = sz.unpack("S").first
-      fields[id] = stream.readpartial sz
+      fields[id] = file.readpartial sz
       break if id == 0
     end
     new.merge! fields
+  # rescue TypeError, EOFError
   end
 
   extend Forwardable
@@ -30,6 +31,13 @@ class Kdbx::Header
     @fields = other.instance_variable_get(:@fields).clone
   end
 
+  def dump
+    stream = StringIO.new
+    save stream
+    stream.rewind
+    stream.read
+  end
+
   def merge(hash)
     clone.merge! hash
   end
@@ -39,17 +47,17 @@ class Kdbx::Header
     self
   end
 
-  def save(stream)
+  def save(file)
     set_defaults
-    stream.write @fields.fetch :pid
-    stream.write @fields.fetch :sid
-    stream.write @fields.fetch :ver
+    file.write @fields.fetch :pid
+    file.write @fields.fetch :sid
+    file.write @fields.fetch :ver
     @fields.each do |key, val|
       next if !(key.is_a? Integer) || key == 0
-      stream.write [key, val.bytesize].pack("CS") + val
+      file.write [key, val.bytesize].pack("CS") + val
     end
     val = @fields.fetch 0
-    stream.write [0, val.bytesize].pack("CS") + val
+    file.write [0, val.bytesize].pack("CS") + val
   end
 
   private

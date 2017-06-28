@@ -19,7 +19,7 @@ A library for accessing [KeePass](http://keepass.info/) database (v2+), aka kdbx
 
 ```ruby
 # Open existing kdbx file
-kdbx = Kdbx.new("demo.kdbx", password: "password", keyfile: "demo.key")
+kdbx = Kdbx.open("demo.kdbx", password: "password", keyfile: "demo.key")
 
 # Read contents
 puts kdbx.content

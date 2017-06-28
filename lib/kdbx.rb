@@ -1,40 +1,51 @@
-require "kdbx/version"
 require "kdbx/attributes"
-require "kdbx/encryption"
-require "kdbx/wrapper"
+require "kdbx/version"
 require "kdbx/header"
+require "kdbx/crypto"
 
 class Kdbx
-  include Attributes
-  include Encryption
-
-  def initialize(filename = nil, **opts)
-    super()
-    if filename == nil
-      @header  = Header.new
-      @content = String.new
-    else
-      self.filename = filename
-      self.password = opts[:password] if opts.has_key? :password
-      self.keyfile  = opts[:keyfile]  if opts.has_key? :keyfile
-      load
-    end
-  end
-
-  def load
+  def self.open(filename, **options)
+    kdbx = new **options
     File.open filename, "rb" do |file|
-      @header = Header.load file
-      decode_content file.read
+      kdbx.header = Header.load file
+      kdbx.decrypt_content file.read
     end
-    self
+    return kdbx
   end
 
-  def save(name = nil)
-    filename = name unless name == nil
-    File.open filename, "wb" do |file|
-      @header.save file
-      file.write encode_content
+  def initialize(**options)
+    @header  = Header.new
+    @content = String.new
+    self.password = options[:password] if options.has_key? :password
+    self.keyfile  = options[:keyfile]  if options.has_key? :keyfile
+  end
+
+  def save(filename)
+    filename = File.absolute_path filename
+    swapname = getswapname filename
+    begin
+      File.open swapname, "wb" do |file|
+        file.write header.dump
+        file.write encrypt_content
+      end
+      File.delete filename if File.exist? filename
+      File.rename swapname, filename
+      true
+    ensure
+      File.delete swapname if File.exist?(swapname)
     end
-    self
+    true
+  end
+
+  private
+
+  def getswapname(filename)
+    version, name, idx = 1, nil, -1 - File.extname(filename).length
+    loop do
+      name = filename.dup.insert idx, ".#{version}"
+      break unless File.exist? name
+      version += 1
+    end
+    name
   end
 end
