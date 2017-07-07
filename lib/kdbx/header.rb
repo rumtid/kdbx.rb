@@ -77,6 +77,6 @@ class Kdbx::Header
       8 => OpenSSL::Random.random_bytes(32),
       9 => OpenSSL::Random.random_bytes(32),
       10 => "\x02\x00\x00\x00"
-    }) { |k, v1, v2| v1 }
+    }) { |_k, v1, _v2| v1 }
   end
 end

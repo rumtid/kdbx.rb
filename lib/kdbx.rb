@@ -1,21 +1,21 @@
 require "kdbx/attributes"
-require "kdbx/version"
 require "kdbx/header"
 require "kdbx/crypto"
+require "kdbx/version"
 
 class Kdbx
   def self.open(filename, **options)
-    kdbx = new **options
-    File.open filename, "rb" do |file|
-      kdbx.header = Header.load file
-      kdbx.decrypt_content file.read
+    new(**options).tap do |kdbx|
+      File.open filename, "rb" do |file|
+        kdbx.header = Header.load file
+        kdbx.decrypt_content file.read
+      end
     end
-    return kdbx
   end
 
   def initialize(**options)
-    @header  = Header.new
-    @content = String.new
+    @password = @keyfile = nil
+    @header, @content = Header.new, String.new
     self.password = options[:password] if options.has_key? :password
     self.keyfile  = options[:keyfile]  if options.has_key? :keyfile
   end

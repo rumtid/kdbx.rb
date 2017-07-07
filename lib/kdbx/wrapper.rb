@@ -12,7 +12,7 @@ module Kdbx::Wrapper
     payload = String.new
     loop do
       head = stream.readpartial 40
-      id, hash, size = head.unpack "La32L"
+      (id, hash, size) = head.unpack "La32L"
       break if size == 0
       part = stream.readpartial size
       payload << part
