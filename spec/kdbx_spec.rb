@@ -16,6 +16,16 @@ RSpec.describe Kdbx do
       expect( kdbx.content ).to include( "secret" )
     end
 
+    it "accepts 32-byte keyfile" do
+      kdbx = Kdbx.open file("32_byte.kdbx"), keyfile: file("32_byte.key")
+      expect( kdbx.content ).to include( "secret" )
+    end
+
+    it "accepts 64-byte keyfile" do
+      kdbx = Kdbx.open file("64_byte.kdbx"), keyfile: file("64_byte.key")
+      expect( kdbx.content ).to include( "secret" )
+    end
+
     it "accepts binary keyfile" do
       kdbx = Kdbx.open file("binary_key.kdbx"), keyfile: file("binary_key.key")
       expect( kdbx.content ).to include( "secret" )

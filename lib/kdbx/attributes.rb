@@ -13,23 +13,26 @@ class Kdbx
   end
 
   def credential
-    secrets = String.new
-    secrets << password if password
-    if keyfile
-      data = File.read keyfile
-      if [32, 64].include? data.bytesize
-        secrets << data
-      else
-        begin
-          doc = REXML::Document.new data
-          ele = doc.elements["/KeyFile/Key/Data"]
-          secrets << Base64.decode64(ele.text)
-        rescue REXML::ParseException
-          secrets << sha256(data)
-        end
-      end
+    cred = password || String.new
+    return cred if keyfile == nil
+    data = IO.read keyfile
+    if !data.valid_encoding?
+      return cred + sha256(data)
     end
-    secrets
+    if data.bytesize == 32
+      return cred + data
+    end
+    if data =~ /\A\h{64}\z/
+      data = [data].pack("H*")
+      return cred + data
+    end
+    begin
+      xpath = "/KeyFile/Key/Data"
+      tnd = REXML::Document.new(data).get_text(xpath)
+      cred + Base64.decode64(tnd.to_s)
+    rescue REXML::ParseException
+      cred + sha256(data)
+    end
   end
 
   attr_accessor :header
