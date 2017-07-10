@@ -2,71 +2,79 @@ require "openssl"
 require "forwardable"
 
 class Kdbx::Header
+  FILEMAGIC = "\x03\xD9\xA2\x9A\x67\xFB\x4B\xB5\x01\x00\x03\x00".b
+
   def self.load(file)
-    fields = {
-      :pid => file.readpartial(4),
-      :sid => file.readpartial(4),
-      :ver => file.readpartial(4)
-    }
+    if file.readpartial(12) != FILEMAGIC
+      fail ParseError, "bad magic number"
+    end
+    fields = {}
     loop do
-      id = file.readbyte
-      sz = file.readpartial 2
-      sz = sz.unpack("S").first
+      (id, sz) = file.readpartial(3).unpack("CS<")
       fields[id] = file.readpartial sz
       break if id == 0
     end
-    new.merge! fields
-  # rescue TypeError, EOFError
+    new fields
+  rescue TypeError, EOFError
+    fail ParseError, "truncated header"
   end
 
   extend Forwardable
-  def_delegators :@fields, :[], :[]=, :has_key?
+  def_delegators :@fields, :[], :[]=
 
-  def initialize
-    @fields = {}
-  end
-
-  def initialize_copy(other)
-    super
-    @fields = other.instance_variable_get(:@fields).clone
+  def initialize(fields = {})
+    @fields = fields
+    validate
   end
 
   def dump
-    stream = StringIO.new
-    save stream
-    stream.rewind
-    stream.read
+    merge_defaults and validate
+    StringIO.new.binmode.tap do |io|
+      io.write FILEMAGIC
+      @fields.each do |k, v|
+        io.write [k, v.bytesize].pack("CS<") + v if k != 0
+      end
+      io.write [0, @fields[0].bytesize].pack("CS<") + @fields[0]
+    end.string
   end
 
-  def merge(hash)
-    clone.merge! hash
-  end
-
-  def merge!(hash)
-    @fields.merge! hash
-    self
-  end
-
-  def save(file)
-    set_defaults
-    file.write @fields.fetch :pid
-    file.write @fields.fetch :sid
-    file.write @fields.fetch :ver
-    @fields.each do |key, val|
-      next if !(key.is_a? Integer) || key == 0
-      file.write [key, val.bytesize].pack("CS") + val
+  def validate
+    @fields.each do |k, v|
+      fail FormatError, "header #{k.inspect}: #{v}" unless k.is_a? Integer
+      fail FormatError, "header #{k}: #{v.inspect}" unless v.is_a? String
+      @fields[k] = v = v.b unless v.encoding == Encoding::ASCII_8BIT
+      case k
+      when 2
+        if v != "\x31\xC1\xF2\xE6\xBF\x71\x43\x50\xBE\x58\x05\x21\x6A\xFC\x5A\xFF".b
+          fail FormatError, "header #{k}: #{v.inspect}"
+        end
+      when 3
+        if v.bytesize != 4 || !(0..1).include?(v.unpack("L").first)
+          fail FormatError, "header #{k}: #{v.inspect}"
+        end
+      when 4, 5
+        fail FormatError, "header #{k}: #{v.inspect}" if v.bytesize != 32
+      when 6
+        fail FormatError, "header #{k}: #{v.inspect}" if v.bytesize != 8
+      when 7
+        fail FormatError, "header #{k}: #{v.inspect}" if v.bytesize != 16
+      when 8
+        if @fields[10] == "\x02\x00\x00\x00".b && v.bytesize != 32
+          fail FormatError, "header #{k}: #{v.inspect}"
+        end
+      when 10
+        fail FormatError, "header #{k}: #{v.inspect}" if v.bytesize != 4
+        if (n = v.unpack("L<").first) != 0 && n != 2
+          fail FormatError, "header #{k}: #{v.inspect}"
+        end
+      end
     end
-    val = @fields.fetch 0
-    file.write [0, val.bytesize].pack("CS") + val
   end
 
   private
 
-  def set_defaults
+  def merge_defaults
     @fields.merge!({
-      :pid => "\x03\xD9\xA2\x9A",
-      :sid => "\x67\xFB\x4B\xB5",
-      :ver => "\x01\x00\x03\x00",
       0 => "\x00\xD0\xAD\x0A",
       2 => "\x31\xC1\xF2\xE6\xBF\x71\x43\x50\xBE\x58\x05\x21\x6A\xFC\x5A\xFF",
       3 => "\x01\x00\x00\x00",
@@ -78,5 +86,6 @@ class Kdbx::Header
       9 => OpenSSL::Random.random_bytes(32),
       10 => "\x02\x00\x00\x00"
     }) { |_k, v1, _v2| v1 }
+    true
   end
 end

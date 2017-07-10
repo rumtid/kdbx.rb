@@ -21,31 +21,27 @@ class Kdbx
   end
 
   def save(filename)
-    filename = File.absolute_path filename
-    swapname = getswapname filename
-    begin
-      File.open swapname, "wb" do |file|
-        file.write header.dump
-        file.write encrypt_content
-      end
-      File.delete filename if File.exist? filename
-      File.rename swapname, filename
-      true
-    ensure
-      File.delete swapname if File.exist?(swapname)
+    secure_write filename do |file|
+      file.write header.dump
+      file.write encrypt_content
     end
     true
   end
 
   private
 
-  def getswapname(filename)
-    version, name, idx = 1, nil, -1 - File.extname(filename).length
-    loop do
-      name = filename.dup.insert idx, ".#{version}"
-      break unless File.exist? name
-      version += 1
+  def secure_write(name)
+    name  = File.absolute_path name
+    index = -1 - File.extname(name).length
+    temp  = 1.step do |i|
+      t = name.dup.insert index, ".#{i}"
+      break t unless File.exist? t
     end
-    name
+    begin
+      File.open(temp, "wb") { |file| yield file }
+      File.rename temp, name
+    ensure
+      File.delete temp if File.exist? temp
+    end
   end
 end

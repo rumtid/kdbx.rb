@@ -42,10 +42,6 @@ class Kdbx
     @header[3] = [flag].pack("L")
   end
 
-  def zipped?
-    compressionflags == 1
-  end
-
   def masterseed
     @header[4]
   end
@@ -86,5 +82,11 @@ class Kdbx
 
   def inspect
     super
+  end
+
+  private
+
+  def nonce
+    "\xE8\x30\x09\x4B\x97\x20\x5D\x2A".b
   end
 end
