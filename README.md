@@ -4,13 +4,11 @@
 [![Code Climate](https://codeclimate.com/github/rumtid/kdbx.rb/badges/gpa.svg)](https://codeclimate.com/github/rumtid/kdbx.rb)
 [![Gem Version](https://badge.fury.io/rb/kdbx.svg)](https://badge.fury.io/rb/kdbx)
 
-A library for accessing [KeePass](http://keepass.info/) database (v2+), aka kdbx format file.
+A library to access [KeePass](http://keepass.info/) database(aka kdbx format file).
 
-## Capability
+## Warning
 
-- [x] Read/Write kdbx (v2) file.
-- [x] Change keys and headers.
-- [ ] Support kdbx (v4) file.
+:construction: Working in progress, not ready for production.
 
 ## Installation
 
@@ -29,14 +27,8 @@ puts kdbx.content
 kdbx.password = "foobar"
 
 # Save
-kdbx.save
+kdbx.save("demo.kdbx")
 ```
-
-## Development
-
-First, install dependencies: `bundle install`
-
-Then run tests: `rspec`
 
 ## License
 
