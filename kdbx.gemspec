@@ -11,6 +11,6 @@ Gem::Specification.new do |spec|
   spec.files = Dir["README.md", "LICENSE.txt", "lib/**/*.rb"]
 
   spec.add_runtime_dependency "salsa20", "= 0.1.2"
-  spec.add_development_dependency "rspec", "~> 3.5"
-  spec.add_development_dependency "pry", "~> 0.10"
+  spec.add_development_dependency "rspec"
+  spec.add_development_dependency "pry"
 end

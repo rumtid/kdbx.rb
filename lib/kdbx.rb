@@ -1,4 +1,5 @@
 require "kdbx/attributes"
+require "kdbx/errors"
 require "kdbx/header"
 require "kdbx/crypto"
 require "kdbx/version"
