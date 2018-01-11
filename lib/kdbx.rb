@@ -5,6 +5,15 @@ require "kdbx/crypto"
 require "kdbx/version"
 
 class Kdbx
+  ##
+  # Open kdbx file from the given +filename+. Optional parameter +credentials+
+  # are as follows:
+  #
+  # * +password+
+  # * +keyfile+
+  #
+  # For example
+  #   kdbx = Kdbx.new("example.kdbx", password: "pass", keyfile: "key.jpg")
   def initialize(filename, **credentials)
     self.password = credentials[:password]
     self.keyfile  = credentials[:keyfile]
@@ -15,7 +24,8 @@ class Kdbx
     end
   end
 
-
+  ##
+  # Verify itself and write to +filename+
   def save(filename)
     secure_write filename do |file|
       file.write header.dump
@@ -26,6 +36,8 @@ class Kdbx
 
   private
 
+  ##
+  # Stop saving when error occurs, keep the old file.
   def secure_write(filename)
     origin = File.absolute_path filename
     middle = -1 - File.extname(origin).length

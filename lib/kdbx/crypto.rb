@@ -4,7 +4,7 @@ require "openssl"
 require "salsa20"
 require "rexml/document"
 
-class Kdbx
+class Kdbx # :nodoc:
   def encrypt_content
     data = @content.to_s
     data = obfuscate data if innerrandomstreamid == 2

@@ -1,7 +1,7 @@
 require "base64"
 require "rexml/document"
 
-class Kdbx
+class Kdbx # :nodoc:
   attr_reader :password
   def password=(str)
     @password = str == nil ? "" : sha256(str)
