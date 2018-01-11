@@ -9,7 +9,7 @@ class Kdbx
 
   attr_reader :keyfile
   def keyfile=(str)
-    @keyfile = File.absolute_path str
+    @keyfile = str == nil ? nil : File.absolute_path(str)
   end
 
   def credential
