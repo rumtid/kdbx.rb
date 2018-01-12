@@ -1,13 +1,16 @@
 require "zlib"
-require "base64"
 require "openssl"
 require "salsa20"
 require "rexml/document"
 
 class Kdbx # :nodoc:
   def encrypt_content
-    data = @content.to_s
-    data = obfuscate data if innerrandomstreamid == 2
+    if innerrandomstreamid == 2
+      cipher = Salsa20.new sha256(protectedstreamkey), nonce
+      data = @document.to_xml cipher
+    else
+      data = @document.to_xml
+    end
     data = gzip data if compressionflags == 1
     encrypt streamstartbytes + encode(data)
   end
@@ -22,8 +25,12 @@ class Kdbx # :nodoc:
     end
     data = decode data
     data = gunzip data if compressionflags == 1
-    data = reverse data if innerrandomstreamid == 2
-    @content = data
+    if innerrandomstreamid == 2
+      cipher = Salsa20.new sha256(protectedstreamkey), nonce
+      @document = Document.new data, cipher
+    else
+      @document = Document.new data
+    end
   end
 
   private
@@ -95,36 +102,32 @@ class Kdbx # :nodoc:
     fail ParseError, e.message
   end
 
-  def sequence
-    cipher = Salsa20.new sha256(protectedstreamkey), nonce
-    Enumerator.new do |e|
-      loop { cipher.encrypt("\x00" * 64).each_byte { |b| e << b } }
+  class Salsa20 # :nodoc:
+    def initialize(key, iv)
+      @cipher = ::Salsa20.new key, iv
+      update_block
     end
-  end
 
-  def obfuscate(data)
-    xpath = "//Value[@Protected='True']"
-    doc, seq = REXML::Document.new(data), sequence
-    doc.each_element xpath do |ele|
-      t = ele.texts.join.bytes
-      t.map! { |b| b ^ seq.next }
-      t = Base64.encode64 t.pack("C*")
-      ele.text = t.strip
-    end
-    doc.to_s
-  rescue REXML::ParseException => e
-    fail FormatError, e.message
-  end
+    def update(data)
+      data = data.bytes
+      data.map! do |byte|
+        if @index == 64
+          update_block
+        end
 
-  def reverse(data)
-    xpath = "//Value[@Protected='True']"
-    doc, seq = REXML::Document.new(data), sequence
-    doc.each_element xpath do |ele|
-      t = Base64.decode64(ele.texts.join).bytes
-      ele.text = t.map! { |b| b ^ seq.next }.pack("C*")
+        b = @block.getbyte @index
+        @index = @index + 1
+
+        byte ^ b
+      end
+      data.pack("C*")
     end
-    doc.to_s
-  rescue REXML::ParseException => e
-    fail ParseError, e.message
+
+    private
+
+    def update_block
+      @block = @cipher.encrypt "\x00" * 64
+      @index = 0
+    end
   end
 end

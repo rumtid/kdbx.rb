@@ -81,7 +81,7 @@ class Kdbx # :nodoc:
     @header[10] = [id].pack("L")
   end
 
-  attr_accessor :content
+  attr_accessor :document
 
   def inspect
     super

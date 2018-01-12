@@ -3,6 +3,7 @@ require "kdbx/errors"
 require "kdbx/header"
 require "kdbx/crypto"
 require "kdbx/version"
+require "kdbx/document"
 
 class Kdbx
   ##
@@ -28,7 +29,9 @@ class Kdbx
   # Verify itself and write to +filename+
   def save(filename)
     secure_write filename do |file|
-      file.write header.dump
+      head = header.dump
+      file.write head
+      @document.send :headerhash=, sha256(head)
       file.write encrypt_content
     end
     self
