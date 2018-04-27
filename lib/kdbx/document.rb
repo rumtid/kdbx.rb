@@ -5,6 +5,10 @@ require "rexml/document"
 require_relative "entry"
 
 class Kdbx
+
+  ##
+  # The Kdbx::Document class
+
   class Document
     def initialize(xml, cipher = nil)
       @doc = REXML::Document.new xml

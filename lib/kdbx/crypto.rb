@@ -4,7 +4,9 @@ require "salsa20"
 require "rexml/document"
 
 class Kdbx # :nodoc:
-  def encrypt_content
+  private
+
+  def encryption
     if innerrandomstreamid == 2
       cipher = Salsa20.new sha256(protectedstreamkey), nonce
       data = @document.to_xml cipher
@@ -32,8 +34,6 @@ class Kdbx # :nodoc:
       @document = Document.new data
     end
   end
-
-  private
 
   def sha256(data)
     OpenSSL::Digest::SHA256.digest data
