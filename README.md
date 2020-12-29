@@ -1,7 +1,5 @@
 # Kdbx.rb
 
-[![Build Status](https://travis-ci.org/rumtid/kdbx.rb.svg?branch=master)](https://travis-ci.org/rumtid/kdbx.rb)
-[![Code Climate](https://codeclimate.com/github/rumtid/kdbx.rb/badges/gpa.svg)](https://codeclimate.com/github/rumtid/kdbx.rb)
 [![Gem Version](https://badge.fury.io/rb/kdbx.svg)](https://badge.fury.io/rb/kdbx)
 
 A library to access [KeePass](http://keepass.info/) database(aka kdbx format file).
